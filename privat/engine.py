@@ -5,6 +5,7 @@ class Board:
 
     def __init__(self, width=8, height=8):
         self.tasks = []
+        self.listeners = []
 
         squares = [[Square(self, x, y) for y in range(height)]
                                        for x in range(width)
@@ -65,3 +66,6 @@ class Square:
                 self.board.tasks.append(
                     asyncio.ensure_future(neighbour.increment())
                 )
+
+        for listener in self.board.listeners:
+            listener.refresh_square(self)
