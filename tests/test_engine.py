@@ -14,10 +14,10 @@ def test_init_board():
     assert len(board) == width
     assert len(board[0]) == height
 
-    assert board[3][3].neighbours['up'] == board[3][2]
-    assert board[3][3].neighbours['right'] == board[4][3]
-    assert board[3][3].neighbours['down'] == board[3][4]
-    assert board[3][3].neighbours['left'] == board[2][3]
+    assert board[3][3].up == board[3][2]
+    assert board[3][3].right == board[4][3]
+    assert board[3][3].down == board[3][4]
+    assert board[3][3].left == board[2][3]
 
     assert not 'up' in board[0][0].neighbours
     assert not 'left' in board[0][0].neighbours

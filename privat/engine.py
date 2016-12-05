@@ -53,6 +53,10 @@ class Square:
                 return True
         return False
 
+    def __getattr__(self, name):
+        if name in self.neighbours:
+            return self.neighbours[name]
+
     async def increment(self):
         self.value += 1
         if self.value >= len(self.neighbours):
