@@ -96,8 +96,16 @@ class Board:
 
         self.players_wheel.set_number(int(dump[-1]))
         self.actual_player = next(self.players_wheel)
+        self.recalculate_players()
 
-        # TODO recalculate amount/active for each player
+    def recalculate_players(self):
+        for player in self.players:
+            player.amount = 0
+        for square in self:
+            if square.player:
+                square.player.amount += square.value
+        for player in self.players:
+            player.active = True if player.amount > 0 else False
 
     @property
     def overall_value(self):

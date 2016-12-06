@@ -208,5 +208,5 @@ async def test_multiple_expansions():
     await board[0, 0].increment()
     await board.process()
 
-    assert board.dump() == '111210111113123111133230101102312'
+    assert board.dump() == '111210111113123111133230101102313'
     assert board.overall_value == old_value + 1
