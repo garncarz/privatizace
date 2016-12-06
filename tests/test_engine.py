@@ -118,3 +118,24 @@ def test_iterator():
 
     with pytest.raises(StopIteration):
         next(it)
+
+
+@pytest.mark.asyncio
+async def test_amounts():
+    board = engine.Board(3, 3, players=2)
+
+    await board[0, 0].increment()
+    await board.process()
+
+    await board[0, 1].increment()
+    await board.process()
+
+    assert board.players[1].amount == 1
+    assert board.players[1].active
+
+    await board[0, 0].increment()
+    await board.process()
+
+    assert board.players[0].amount == 3
+    assert board.players[1].amount == 0
+    assert not board.players[1].active

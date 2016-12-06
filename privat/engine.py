@@ -1,5 +1,4 @@
 import asyncio
-from itertools import cycle
 
 
 class GameException(Exception):
@@ -13,11 +12,14 @@ class SquareException(GameException):
 class Board:
 
     def __init__(self, width=8, height=8, players=4):
+        self.width = width
+        self.height = height
+
         self.tasks = []
         self.listeners = []
 
         self.players = [Player(i) for i in range(players)]
-        self.players_wheel = cycle(self.players)
+        self.players_wheel = PlayersWheel(self.players)
         self.actual_player = next(self.players_wheel)
 
         squares = [[Square(self, x, y) for y in range(height)]
@@ -51,16 +53,14 @@ class Board:
             return self[column, row]
 
     def __iter__(self):
-        self._iter_square = None
+        self._iter_square = 0
         return self
 
     def __next__(self):
-        if self._iter_square is None:
-            self._iter_square = 0
-        else:
-            self._iter_square += 1
         try:
-            return self[self._iter_square]
+            square = self[self._iter_square]
+            self._iter_square += 1
+            return square
         except SquareException:
             raise StopIteration
 
@@ -103,12 +103,21 @@ class Square:
             self.player = self.board.actual_player
 
         self.value += 1
+        self.player.amount += 1
 
         if self.value >= len(self.neighbours):
+            self.player.amount -= self.value
             self.value = 0
 
             for neighbour in self.neighbours.values():
+                if neighbour.player and neighbour.player != self.player:
+                    neighbour.player.amount -= neighbour.value
+                    if neighbour.player.amount == 0:
+                        neighbour.player.active = False
+                    self.player.amount += neighbour.value
+
                 neighbour.player = self.player
+
                 self.board.tasks.append(
                     asyncio.ensure_future(neighbour.increment())
                 )
@@ -119,7 +128,7 @@ class Square:
     @property
     def color(self):
         if self.player:
-            return self.player.number + 1
+            return self.player.color
         return 0
 
 
@@ -130,9 +139,35 @@ class Player:
     def __init__(self, number, name=None):
         self.number = number
         self.name = name or self.NAMES[self.number]
+        self.amount = 0
+        self.active = True
 
     def __repr__(self):
         return '<Player %s>' % self.name
 
     def __str__(self):
         return self.name
+
+    @property
+    def color(self):
+        return self.number + 1
+
+
+class PlayersWheel:
+
+    def __init__(self, players):
+        self.players = players[:]
+        self._iter_player = 0
+
+    def __next__(self):
+        if self._iter_player >= len(self.players):
+            self._iter_player = 0
+
+        player = self.players[self._iter_player]
+        if not player.active:
+            self.players.pop(self._iter_player)
+            player = next(self)
+        else:
+            self._iter_player += 1
+
+        return player
