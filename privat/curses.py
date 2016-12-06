@@ -12,6 +12,7 @@ class App:
     def __init__(self):
         self.board = engine.Board()
         self.board.listeners.append(self)
+        self.in_game = True
 
     async def _run(self):
         self.refresh()
@@ -27,10 +28,12 @@ class App:
 
             elif ev == curses.KEY_MOUSE:
                 _, x, y, _, m_ev = curses.getmouse()
-                if m_ev & curses.BUTTON1_RELEASED:
+                if self.in_game and m_ev & curses.BUTTON1_RELEASED:
                     try:
                         await self.board[x, y].increment()
                         await self.board.process()
+                    except engine.WinnerException as w:
+                        self.in_game = False
                     except engine.SquareException:
                         pass
 

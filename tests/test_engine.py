@@ -24,7 +24,7 @@ def test_init_board():
 
 @pytest.mark.asyncio
 async def test_process():
-    board = engine.Board(4, 4, players=1)
+    board = engine.Board(4, 4, players=2)
 
     await board[0, 0].increment()
     await board[0, 0].increment()
@@ -34,25 +34,23 @@ async def test_process():
     assert board[0, 1].value == 1
     assert board[1, 0].value == 1
 
-    await board[0, 1].increment()
-    await board[0, 1].increment()
+    await board[1, 1].increment()
+    await board[2, 1].increment()
     await board.process()
 
-    assert board[0, 1].value == 0
-    assert board[0, 0].value == 1
-    assert board[0, 2].value == 1
     assert board[1, 1].value == 1
+    assert board[2, 1].value == 1
 
-    await board[1, 1].increment()
-    await board[1, 1].increment()
-    await board[1, 1].increment()
+    await board[0, 1].increment()
+    await board[0, 1].increment()
+    await board[0, 1].increment()
     await board.process()
 
-    assert board[1, 1].value == 0
+    assert board[1, 1].value == 2
     assert board[0, 1].value == 1
     assert board[2, 1].value == 1
-    assert board[1, 0].value == 2
-    assert board[1, 2].value == 1
+    assert board[1, 0].value == 1
+    assert board[1, 2].value == 0
 
 
 @pytest.mark.asyncio
@@ -62,7 +60,7 @@ async def test_process_bad_player():
     await board[0, 0].increment()
     await board.process()
 
-    with pytest.raises(engine.GameException) as e:
+    with pytest.raises(engine.SquareException) as e:
         await board[0, 0].increment()
     assert 'does not belong to' in str(e)
     assert board.actual_player == board.players[1]
@@ -79,7 +77,10 @@ async def test_process_multiple_players():
 
     await board[0, 1].increment()
     await board[0, 1].increment()
-    await board.process()
+
+    with pytest.raises(engine.WinnerException) as e:
+        await board.process()
+        assert e.number == 0
 
     assert board[0, 0].value == 0
     assert board[0, 0].player == board.players[1]
@@ -134,7 +135,10 @@ async def test_amounts():
     assert board.players[1].active
 
     await board[0, 0].increment()
-    await board.process()
+
+    with pytest.raises(engine.WinnerException) as e:
+        await board.process()
+        assert e.number == 0
 
     assert board.players[0].amount == 3
     assert board.players[1].amount == 0

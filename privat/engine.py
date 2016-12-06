@@ -9,6 +9,10 @@ class SquareException(GameException):
     pass
 
 
+class WinnerException(GameException):
+    pass
+
+
 class Board:
 
     def __init__(self, width=8, height=8, players=4):
@@ -169,5 +173,8 @@ class PlayersWheel:
             player = next(self)
         else:
             self._iter_player += 1
+
+        if len(self.players) == 1:
+            raise WinnerException(player)
 
         return player

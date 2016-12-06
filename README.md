@@ -18,6 +18,11 @@ Preferably under `virtualenv`:
 `pip-sync requirements*.txt` (keeping the PyPI dependencies up-to-date)
 
 
+## Usage
+
+`./app.py` is an ncurses-based game.
+
+
 ## Testing
 
 `./test.sh` (also generates coverage)
