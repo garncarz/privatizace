@@ -189,3 +189,8 @@ async def test_continuous_addition(max_x, max_y, steps):
             old_value = new_value
         except engine.SquareException:
             pass
+
+        for player in board.players:
+            if not player.active:
+                for square in board:
+                    assert square.player != player
