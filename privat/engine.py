@@ -6,6 +6,10 @@ class GameException(Exception):
     pass
 
 
+class SquareException(GameException):
+    pass
+
+
 class Board:
 
     def __init__(self, width=8, height=8, players=4):
@@ -32,11 +36,33 @@ class Board:
         self.squares = squares
 
     def __getitem__(self, index):
-        if isinstance(index, int):
-            return self.squares[index]
+        if isinstance(index, tuple):
+            try:
+                column, row = index
+                return self.squares[column][row]
+            except IndexError:
+                raise SquareException('bad coordinate', index)
 
-    def __len__(self):
-        return len(self.squares)
+        if isinstance(index, int):
+            column = index // len(self.squares[0])
+            if column >= len(self.squares):
+                raise SquareException("there's not that many squares")
+            row = index % len(self.squares[0])
+            return self[column, row]
+
+    def __iter__(self):
+        self._iter_square = None
+        return self
+
+    def __next__(self):
+        if self._iter_square is None:
+            self._iter_square = 0
+        else:
+            self._iter_square += 1
+        try:
+            return self[self._iter_square]
+        except SquareException:
+            raise StopIteration
 
     async def process(self):
         if self.tasks:
@@ -71,8 +97,8 @@ class Square:
 
     async def increment(self):
         if self.player and self.player != self.board.actual_player:
-            raise GameException('This square does not belong to %s'
-                                % self.board.actual_player)
+            raise SquareException('This square does not belong to %s'
+                                  % self.board.actual_player)
         if not self.player:
             self.player = self.board.actual_player
 

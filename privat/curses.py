@@ -12,9 +12,8 @@ class App:
     async def _run(self):
         self.screen.clear()
 
-        for column in self.board:
-            for square in column:
-                self.refresh_square(square)
+        for square in self.board:
+            self.refresh_square(square)
 
         while True:
             ev = self.screen.getch()
@@ -26,13 +25,10 @@ class App:
                 _, x, y, _, m_ev = curses.getmouse()
                 if m_ev & curses.BUTTON1_RELEASED:
                     try:
-                        await self.board[x][y].increment()
+                        await self.board[x, y].increment()
                         await self.board.process()
-                    except engine.GameException as e:
-                        if 'does not belong to' in str(e):
-                            pass
-                        else:
-                            raise e
+                    except engine.SquareException:
+                        pass
 
     def refresh_square(self, square):
         self.screen.addnstr(square.y, square.x, str(square.value), 1,
