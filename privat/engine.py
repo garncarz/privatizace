@@ -75,6 +75,21 @@ class Board:
 
         self.actual_player = next(self.players_wheel)
 
+    def dump(self):
+        dump = ''
+        for square in self:
+            player_number = square.player.number if square.player else '-'
+            dump += '%s%d' % (player_number, square.value)
+        return dump
+
+    def load(self, dump):
+        for sq_nr, square in enumerate(self):
+            player_number = dump[2 * sq_nr]
+            square.player = self.players[int(player_number)] \
+                            if player_number != '-' else None
+            square.value = int(dump[2 * sq_nr + 1])
+        # TODO recalculate amount/active for each player
+
 
 class Square:
 

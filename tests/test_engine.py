@@ -52,6 +52,8 @@ async def test_process():
     assert board[1, 0].value == 1
     assert board[1, 2].value == 0
 
+    return board  # used in another test
+
 
 @pytest.mark.asyncio
 async def test_process_bad_player():
@@ -143,3 +145,22 @@ async def test_amounts():
     assert board.players[0].amount == 3
     assert board.players[1].amount == 0
     assert not board.players[1].active
+
+
+@pytest.mark.asyncio
+async def test_dump_and_load():
+    board1 = await test_process()
+
+    board2 = engine.Board(4, 4, players=2)
+
+    board2.load(board1.dump())
+
+    assert board2[1, 1].value == 2
+    assert board2[0, 1].value == 1
+    assert board2[2, 1].value == 1
+    assert board2[1, 0].value == 1
+    assert board2[1, 2].value == 0
+
+    assert board2[1, 1].player.number == 0
+    assert board2[2, 1].player.number == 1
+    assert not board2[3, 3].player
