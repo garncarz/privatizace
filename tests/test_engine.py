@@ -189,8 +189,24 @@ async def test_continuous_addition(max_x, max_y, steps):
             old_value = new_value
         except engine.SquareException:
             pass
+        except engine.WinnerException:
+            pass
 
         for player in board.players:
             if not player.active:
                 for square in board:
                     assert square.player != player
+
+
+@pytest.mark.asyncio
+async def test_multiple_expansions():
+    board = engine.Board(4, 4)
+    board.load('111110111212123102023230010002311')
+
+    old_value = board.overall_value
+
+    await board[0, 0].increment()
+    await board.process()
+
+    assert board.dump() == '111210111113123111133230101102312'
+    assert board.overall_value == old_value + 1

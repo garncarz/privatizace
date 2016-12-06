@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class App:
 
-    def __init__(self):
-        self.board = engine.Board()
+    def __init__(self, width=8, height=8, players=4):
+        self.board = engine.Board(width, height, players)
         self.board.listeners.append(self)
         self.in_game = True
 

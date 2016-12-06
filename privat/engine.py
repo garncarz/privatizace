@@ -21,6 +21,7 @@ class Board:
 
         self.tasks = []
         self.listeners = []
+        self.history = []
 
         self.players = [Player(i) for i in range(players)]
         self.players_wheel = PlayersWheel(self.players)
@@ -70,9 +71,10 @@ class Board:
 
     async def process(self):
         while self.tasks:
-            await asyncio.wait(self.tasks)
-            self.tasks = []
+            task = self.tasks.pop(0)
+            await asyncio.wait([task])
 
+        self.history.append(self.dump())
         self.actual_player = next(self.players_wheel)
 
     def dump(self):
@@ -80,14 +82,21 @@ class Board:
         for square in self:
             player_number = square.player.number if square.player else '-'
             dump += '%s%d' % (player_number, square.value)
+        dump += '%s' % self.actual_player.number
         return dump
 
     def load(self, dump):
+        assert len(dump) == self.width * self.height * 2 + 1
+
         for sq_nr, square in enumerate(self):
             player_number = dump[2 * sq_nr]
             square.player = self.players[int(player_number)] \
                             if player_number != '-' else None
             square.value = int(dump[2 * sq_nr + 1])
+
+        self.players_wheel.set_number(int(dump[-1]))
+        self.actual_player = next(self.players_wheel)
+
         # TODO recalculate amount/active for each player
 
     @property
@@ -121,8 +130,8 @@ class Square:
 
     async def increment(self):
         if self.player and self.player != self.board.actual_player:
-            raise SquareException('This square does not belong to %s'
-                                  % self.board.actual_player)
+            raise SquareException('%s does not belong to %s'
+                                  % (self, self.board.actual_player))
         if not self.player:
             self.player = self.board.actual_player
 
@@ -198,3 +207,6 @@ class PlayersWheel:
             raise WinnerException(player)
 
         return player
+
+    def set_number(self, number):
+        self._iter_player = number
