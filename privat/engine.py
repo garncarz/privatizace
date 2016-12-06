@@ -90,6 +90,10 @@ class Board:
             square.value = int(dump[2 * sq_nr + 1])
         # TODO recalculate amount/active for each player
 
+    @property
+    def overall_value(self):
+        return sum(square.value for square in self)
+
 
 class Square:
 

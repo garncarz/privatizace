@@ -164,3 +164,28 @@ async def test_dump_and_load():
     assert board2[1, 1].player.number == 0
     assert board2[2, 1].player.number == 1
     assert not board2[3, 3].player
+
+
+@pytest.mark.parametrize('max_x, max_y, steps', [
+    (5, 5, 40),
+    (5, 5, 100),
+    (4, 4, 50),
+])
+@pytest.mark.asyncio
+async def test_continuous_addition(max_x, max_y, steps):
+    board = engine.Board(max_x, max_y)
+    old_value = 0
+
+    for step in range(steps):
+        x = random.randint(0, max_x)
+        y = random.randint(0, max_y)
+
+        try:
+            await board[x, y].increment()
+            await board.process()
+
+            new_value = board.overall_value
+            assert new_value == old_value + 1
+            old_value = new_value
+        except engine.SquareException:
+            pass
