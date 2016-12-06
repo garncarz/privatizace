@@ -4,6 +4,8 @@ import logging
 from . import engine
 
 
+SQUARE_SLEEP = 100
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,15 +61,17 @@ class App:
         self.refresh_info()
 
         for square in self.board:
-            self.refresh_square(square, refresh_info=False)
+            self.refresh_square(square, in_game=False)
 
-    def refresh_square(self, square, refresh_info=True):
+    def refresh_square(self, square, in_game=True):
         self.board_window.addnstr(square.y, square.x, str(square.value), 1,
                                   curses.color_pair(square.color))
         self.board_window.refresh()
 
-        if refresh_info:
+        if in_game:
             self.refresh_info()
+            curses.beep()
+            curses.napms(SQUARE_SLEEP)
 
     def refresh_info(self):
         win = self.info_window
