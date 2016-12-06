@@ -27,7 +27,7 @@ def test_init_board():
 
 @pytest.mark.asyncio
 async def test_process():
-    board = engine.Board(4, 4)
+    board = engine.Board(4, 4, players=1)
 
     await board[0][0].increment()
     await board[0][0].increment()
@@ -56,3 +56,34 @@ async def test_process():
     assert board[2][1].value == 1
     assert board[1][0].value == 2
     assert board[1][2].value == 1
+
+
+@pytest.mark.asyncio
+async def test_process_bad_player():
+    board = engine.Board(4, 4)
+
+    await board[0][0].increment()
+    await board.process()
+
+    with pytest.raises(engine.GameException) as e:
+        await board[0][0].increment()
+    assert 'does not belong to' in str(e)
+    assert board.actual_player == board.players[1]
+
+
+@pytest.mark.asyncio
+async def test_process_multiple_players():
+    board = engine.Board(2, 2, players=2)
+
+    await board[0][0].increment()
+    await board.process()
+
+    assert board[0][0].player == board.players[0]
+
+    await board[0][1].increment()
+    await board[0][1].increment()
+    await board.process()
+
+    assert board[0][0].value == 0
+    assert board[0][0].player == board.players[1]
+    assert board[0][1].value == 1

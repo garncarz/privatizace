@@ -12,9 +12,9 @@ class App:
     async def _run(self):
         self.screen.clear()
 
-        for x, column in enumerate(self.board):
-            for y, square in enumerate(column):
-                self.screen.addch(y, x, str(square.value))
+        for column in self.board:
+            for square in column:
+                self.refresh_square(square)
 
         while True:
             ev = self.screen.getch()
@@ -25,11 +25,18 @@ class App:
             if ev == curses.KEY_MOUSE:
                 _, x, y, _, m_ev = curses.getmouse()
                 if m_ev & curses.BUTTON1_RELEASED:
-                    await self.board[x][y].increment()
-                    await self.board.process()
+                    try:
+                        await self.board[x][y].increment()
+                        await self.board.process()
+                    except engine.GameException as e:
+                        if 'does not belong to' in str(e):
+                            pass
+                        else:
+                            raise e
 
     def refresh_square(self, square):
-        self.screen.addch(square.y, square.x, str(square.value))
+        self.screen.addnstr(square.y, square.x, str(square.value), 1,
+                            curses.color_pair(square.color))
 
     async def run(self):
         try:
@@ -40,6 +47,11 @@ class App:
             self.screen.keypad(1)
 
             curses.start_color()
+            bg = curses.COLOR_BLACK
+            curses.init_pair(1, curses.COLOR_BLUE, bg)
+            curses.init_pair(2, curses.COLOR_RED, bg)
+            curses.init_pair(3, curses.COLOR_GREEN, bg)
+            curses.init_pair(4, curses.COLOR_YELLOW, bg)  # original uses BLACK
 
             curses.mousemask(1)
 
