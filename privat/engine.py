@@ -69,8 +69,9 @@ class Board:
             raise StopIteration
 
     async def process(self):
-        if self.tasks:
+        while self.tasks:
             await asyncio.wait(self.tasks)
+            self.tasks = []
 
         self.actual_player = next(self.players_wheel)
 

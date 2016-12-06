@@ -23,6 +23,9 @@ class App:
             if ev in [ord('q'), ord('Q')]:
                 break
 
+            elif ev == ord('r'):
+                self.refresh()
+
             elif ev == curses.KEY_RESIZE:
                 self.refresh()
 
@@ -70,11 +73,14 @@ class App:
         win = self.info_window
 
         for player in self.board.players:
+            name = player.name
             color = curses.color_pair(player.color)
+
             if player == self.board.actual_player:
+                name = name.upper()
                 color = color | curses.A_BOLD
 
-            win.addstr(player.number * 3, 0, player.name, color)
+            win.addstr(player.number * 3, 0, name, color)
             win.addstr(player.number * 3 + 1, 0,
                        '%5d' % player.amount if player.active
                           else '-'*5,
