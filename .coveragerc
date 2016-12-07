@@ -1,0 +1,3 @@
+[run]
+omit =
+    privat/curses.py
