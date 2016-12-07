@@ -32,7 +32,11 @@ class App:
                 self.refresh()
 
             elif ev == curses.KEY_MOUSE:
-                _, x, y, _, m_ev = curses.getmouse()
+                try:
+                    _, x, y, _, m_ev = curses.getmouse()
+                except curses.error:
+                    continue
+
                 if self.in_game and m_ev & curses.BUTTON1_RELEASED:
                     try:
                         await self.board[x, y].increment()
