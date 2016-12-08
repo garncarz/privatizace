@@ -84,9 +84,10 @@ async def test_process_multiple_players():
         await board.process()
         assert e.number == 0
 
-    assert board[0, 0].value == 0
+    # squares didn't expand to prevent never-ending expansion
+    assert board[0, 0].value == 2
     assert board[0, 0].player == board.players[1]
-    assert board[0, 1].value == 1
+    assert board[0, 1].value == 0
 
 
 def test_bad_coordinate():
@@ -285,3 +286,21 @@ async def test_history():
 
     with pytest.raises(engine.HistoryException):
         board.history_jump(+1)
+
+
+@pytest.mark.asyncio
+async def test_not_neverending():
+    board = engine.Board(2, 2, players=3)
+
+    await board[0, 0].increment()
+    await board.process()
+
+    await board[0, 1].increment()
+    await board.process()
+
+    await board[1, 0].increment()
+    await board.process()
+
+    await board[0, 0].increment()
+    with pytest.raises(engine.WinnerException):
+        await board.process()

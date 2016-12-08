@@ -51,6 +51,7 @@ class App:
             elif ev == curses.KEY_LEFT:
                 try:
                     self.board.history_jump(-1)
+                    self.in_game = True
                     self.refresh()
                 except engine.HistoryException:
                     pass
@@ -58,6 +59,7 @@ class App:
             elif ev == curses.KEY_RIGHT:
                 try:
                     self.board.history_jump(+1)
+                    self.in_game = True
                     self.refresh()
                 except engine.HistoryException:
                     pass

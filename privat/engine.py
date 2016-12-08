@@ -81,8 +81,16 @@ class Board:
         self.history = self.history[:self.history_position]
         self.history.append(self.dump())
 
-        if self.players_wheel.is_winner():
+        if self.is_victory():
             raise WinnerException(self.actual_player)
+
+    def is_victory(self):
+        actives = sum(int(player.active) for player in self.players)
+        if actives == 1:
+            return True
+        elif actives < 1:
+            raise GameException('No active players')
+        return False
 
     def dump(self):
         dump = ''
@@ -103,7 +111,6 @@ class Board:
 
         self.recalculate_players(soft)
 
-        self.players_wheel = PlayersWheel(self.players)
         self.players_wheel.set_number(int(dump[-1]))
         self.actual_player = next(self.players_wheel)
 
@@ -166,7 +173,7 @@ class Square:
         self.value += 1
         self.player.amount += 1
 
-        if self.value >= len(self.neighbours):
+        if self.value >= len(self.neighbours) and not self.board.is_victory():
             self.player.amount -= self.value
             self.value = 0
 
@@ -231,7 +238,7 @@ class SquaresIterator:
 class PlayersWheel:
 
     def __init__(self, players):
-        self.players = players[:]
+        self.players = players
         self._iter_player = 0
 
     def __next__(self):
@@ -239,22 +246,13 @@ class PlayersWheel:
             self._iter_player = 0
 
         player = self.players[self._iter_player]
-        if not player.active:
-            self.players.pop(self._iter_player)
-            player = next(self)
+        self._iter_player += 1
+
+        if player.active:
+            return player
         else:
-            self._iter_player += 1
-
-        return player
-
-    def is_winner(self):
-        return len(self.players) == 1
+            # beware, might end as an infinite loop
+            return next(self)
 
     def set_number(self, number):
-        for key, player in enumerate(self.players):
-            if player.number == number:
-                self._iter_player = key
-                break
-        else:
-            raise GameException('No player in iterator with number %s'
-                                % number)
+        self._iter_player = number
