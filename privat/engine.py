@@ -58,16 +58,7 @@ class Board:
             return self[column, row]
 
     def __iter__(self):
-        self._iter_square = 0
-        return self
-
-    def __next__(self):
-        try:
-            square = self[self._iter_square]
-            self._iter_square += 1
-            return square
-        except SquareException:
-            raise StopIteration
+        return SquaresIterator(self)
 
     async def process(self):
         while self.tasks:
@@ -192,6 +183,20 @@ class Player:
     @property
     def color(self):
         return self.number + 1
+
+
+class SquaresIterator:
+    def __init__(self, board):
+        self.board = board
+        self._iter_square = 0
+
+    def __next__(self):
+        try:
+            square = self.board[self._iter_square]
+            self._iter_square += 1
+            return square
+        except SquareException:
+            raise StopIteration
 
 
 class PlayersWheel:

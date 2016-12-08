@@ -210,3 +210,14 @@ async def test_multiple_expansions():
 
     assert board.dump() == '111210111113123111133230101102313'
     assert board.overall_value == old_value + 1
+
+
+def test_multiple_iterators():
+    board = engine.Board()
+
+    it1 = iter(board)
+    it2 = iter(board)
+
+    assert next(it1) == next(it2)
+    assert next(it1) == next(it2)
+    assert next(it1) == next(it2)
