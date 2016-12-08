@@ -244,6 +244,9 @@ async def test_history():
     assert not board.players[1].active
 
     board.history_jump(-1)
+    assert board.actual_player.number == 0
+
+    board.history_jump(-1)
     assert board.actual_player.number == 1
 
     board.history_jump(-1)
@@ -258,16 +261,21 @@ async def test_history():
     board.history_jump(+1)
     assert board.actual_player.number == 0
 
+    board.history_jump(+1)
+    assert board.actual_player.number == 0
+
     with pytest.raises(engine.HistoryException):
         board.history_jump(+1)
 
     board.history_jump(-1)
-    assert board.actual_player.number == 1
+    assert board.actual_player.number == 0
 
     await board[1, 0].increment()
     await board.process()
 
     assert board.players[1].active
+
+    # changing history:
 
     board.history_jump(-1)
     board.history_jump(-1)

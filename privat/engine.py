@@ -81,6 +81,9 @@ class Board:
         self.history = self.history[:self.history_position]
         self.history.append(self.dump())
 
+        if self.players_wheel.is_winner():
+            raise WinnerException(self.actual_player)
+
     def dump(self):
         dump = ''
         for square in self:
@@ -242,10 +245,10 @@ class PlayersWheel:
         else:
             self._iter_player += 1
 
-        if len(self.players) == 1:
-            raise WinnerException(player)
-
         return player
+
+    def is_winner(self):
+        return len(self.players) == 1
 
     def set_number(self, number):
         for key, player in enumerate(self.players):
