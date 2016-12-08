@@ -1,4 +1,8 @@
 import asyncio
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class GameException(Exception):
@@ -13,6 +17,10 @@ class WinnerException(GameException):
     pass
 
 
+class HistoryException(GameException):
+    pass
+
+
 class Board:
 
     def __init__(self, width=8, height=8, players=4):
@@ -21,7 +29,6 @@ class Board:
 
         self.tasks = []
         self.listeners = []
-        self.history = []
 
         self.players = [Player(i) for i in range(players)]
         self.players_wheel = PlayersWheel(self.players)
@@ -41,6 +48,9 @@ class Board:
                 if y < height - 1:
                     square.neighbours['down'] = squares[x][y+1]
         self.squares = squares
+
+        self.history = [self.dump()]
+        self.history_position = 0
 
     def __getitem__(self, index):
         if isinstance(index, tuple):
@@ -65,8 +75,11 @@ class Board:
             task = self.tasks.pop(0)
             await asyncio.wait([task])
 
-        self.history.append(self.dump())
         self.actual_player = next(self.players_wheel)
+
+        self.history_position += 1
+        self.history = self.history[:self.history_position]
+        self.history.append(self.dump())
 
     def dump(self):
         dump = ''
@@ -76,7 +89,7 @@ class Board:
         dump += '%s' % self.actual_player.number
         return dump
 
-    def load(self, dump):
+    def load(self, dump, soft=False):
         assert len(dump) == self.width * self.height * 2 + 1
 
         for sq_nr, square in enumerate(self):
@@ -85,22 +98,35 @@ class Board:
                             if player_number != '-' else None
             square.value = int(dump[2 * sq_nr + 1])
 
+        self.recalculate_players(soft)
+
+        self.players_wheel = PlayersWheel(self.players)
         self.players_wheel.set_number(int(dump[-1]))
         self.actual_player = next(self.players_wheel)
-        self.recalculate_players()
 
-    def recalculate_players(self):
+    def recalculate_players(self, soft=False):
         for player in self.players:
             player.amount = 0
+            player.active = True
         for square in self:
             if square.player:
                 square.player.amount += square.value
-        for player in self.players:
-            player.active = True if player.amount > 0 else False
+        if not soft:
+            for player in self.players:
+                if player.amount <= 0:
+                    player.active = False
 
     @property
     def overall_value(self):
         return sum(square.value for square in self)
+
+    def history_jump(self, step):
+        if 0 <= self.history_position + step < len(self.history):
+            self.history_position += step
+            soft = self.history_position <= len(self.players)
+            self.load(self.history[self.history_position], soft)
+        else:
+            raise HistoryException('already at a corner')
 
 
 class Square:
@@ -222,4 +248,10 @@ class PlayersWheel:
         return player
 
     def set_number(self, number):
-        self._iter_player = number
+        for key, player in enumerate(self.players):
+            if player.number == number:
+                self._iter_player = key
+                break
+        else:
+            raise GameException('No player in iterator with number %s'
+                                % number)

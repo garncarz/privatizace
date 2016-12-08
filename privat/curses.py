@@ -48,6 +48,20 @@ class App:
 
                     self.refresh_info()
 
+            elif ev == curses.KEY_LEFT:
+                try:
+                    self.board.history_jump(-1)
+                    self.refresh()
+                except engine.HistoryException:
+                    pass
+
+            elif ev == curses.KEY_RIGHT:
+                try:
+                    self.board.history_jump(+1)
+                    self.refresh()
+                except engine.HistoryException:
+                    pass
+
     def refresh(self):
         self.screen.clear()
 

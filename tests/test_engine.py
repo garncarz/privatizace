@@ -221,3 +221,59 @@ def test_multiple_iterators():
     assert next(it1) == next(it2)
     assert next(it1) == next(it2)
     assert next(it1) == next(it2)
+
+
+@pytest.mark.asyncio
+async def test_history():
+    board = engine.Board(4, 4, players=2)
+
+    assert board.actual_player.number == 0
+    await board[0, 0].increment()
+    await board.process()
+
+    assert board.actual_player.number == 1
+    await board[0, 1].increment()
+    await board.process()
+
+    assert board.actual_player.number == 0
+    await board[0, 0].increment()
+    with pytest.raises(engine.WinnerException):
+        await board.process()
+
+    assert board.actual_player.number == 0
+    assert not board.players[1].active
+
+    board.history_jump(-1)
+    assert board.actual_player.number == 1
+
+    board.history_jump(-1)
+    assert board.actual_player.number == 0
+
+    with pytest.raises(engine.HistoryException):
+        board.history_jump(-1)
+
+    board.history_jump(+1)
+    assert board.actual_player.number == 1
+
+    board.history_jump(+1)
+    assert board.actual_player.number == 0
+
+    with pytest.raises(engine.HistoryException):
+        board.history_jump(+1)
+
+    board.history_jump(-1)
+    assert board.actual_player.number == 1
+
+    await board[1, 0].increment()
+    await board.process()
+
+    assert board.players[1].active
+
+    board.history_jump(-1)
+    board.history_jump(-1)
+
+    await board[1, 1].increment()
+    await board.process()
+
+    with pytest.raises(engine.HistoryException):
+        board.history_jump(+1)
