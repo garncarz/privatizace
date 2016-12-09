@@ -70,6 +70,10 @@ class Board:
     def __iter__(self):
         return SquaresIterator(self)
 
+    async def play(self, x, y):
+        await self[x, y].increment()
+        await self.process()
+
     async def process(self):
         while self.tasks:
             task = self.tasks.pop(0)

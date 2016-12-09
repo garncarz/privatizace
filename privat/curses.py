@@ -1,10 +1,14 @@
 import curses
 import logging
+import os
 
 from . import engine
+from . import io
 
 
 SQUARE_SLEEP = 100
+
+SAVE_FILE = os.path.expanduser('~/.privatizace')
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +16,25 @@ logger = logging.getLogger(__name__)
 class App:
 
     def __init__(self, width=8, height=8, players=4):
-        self.board = engine.Board(width, height, players)
-        self.board.listeners.append(self)
+        self._width = width
+        self._height = height
+        self._players = players
+        self._board = None
         self.in_game = True
+
+    @property
+    def board(self):
+        if not self._board:
+            try:
+                self._board = io.load_board(open(SAVE_FILE))
+                self._board.listeners.append(self)
+            except Exception:
+                self.create_new_board()
+        return self._board
+
+    def create_new_board(self):
+        self._board = engine.Board(self._width, self._height, self._players)
+        self._board.listeners.append(self)
 
     async def _run(self):
         self.refresh()
@@ -39,14 +59,22 @@ class App:
 
                 if self.in_game and m_ev & curses.BUTTON1_RELEASED:
                     try:
-                        await self.board[x, y].increment()
-                        await self.board.process()
+                        await self.board.play(x, y)
                     except engine.WinnerException as w:
                         self.in_game = False
                     except engine.SquareException:
                         pass
 
                     self.refresh_info()
+
+                    try:
+                        io.save_board(self.board, open(SAVE_FILE, 'w'))
+                    except Exception:
+                        pass
+
+            elif ev == curses.KEY_F2:
+                self.create_new_board()
+                self.refresh()
 
             elif ev == curses.KEY_LEFT:
                 try:
