@@ -11,18 +11,32 @@ This is a homage to the old game
 
 Needed: Python 3.5
 
+`pip install [--user] privatizace`
+
+
+## Usage
+
+`./app.py` is an ncurses-based game.
+See `./app.py --help` for command line arguments.
+
+The board is interacted with with a mouse,
+and the game can be controlled by several keys:
+
+- `←` to go backward in history;
+- `→` to go forward in history;
+- `F2` to start a new game;
+- `r` to refresh the screen (shouldn't be needed);
+- `q` to quit.
+
+The game automatically saves/loads `~/.privatizace`.
+
+
+## Development
+
 Preferably under `virtualenv`:
 
 `pip install pip-tools` (once)
 
 `pip-sync requirements*.txt` (keeping the PyPI dependencies up-to-date)
 
-
-## Usage
-
-`./app.py` is an ncurses-based game.
-
-
-## Testing
-
-`./test.sh` (also generates coverage)
+`./test.sh` (runs tests and also generates a coverage)
