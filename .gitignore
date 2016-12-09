@@ -2,3 +2,7 @@ htmlcov/
 .coverage
 
 *.log
+
+build/
+dist/
+*.egg-info

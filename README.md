@@ -16,8 +16,8 @@ Needed: Python 3.5
 
 ## Usage
 
-`./app.py` is an ncurses-based game.
-See `./app.py --help` for command line arguments.
+`privatizace` is an ncurses-based game.
+See `privatizace --help` for command line arguments.
 
 The board is interacted with with a mouse,
 and the game can be controlled by several keys:
@@ -40,3 +40,5 @@ Preferably under `virtualenv`:
 `pip-sync requirements*.txt` (keeping the PyPI dependencies up-to-date)
 
 `./test.sh` (runs tests and also generates a coverage)
+
+`./app.py` (runs the game)
