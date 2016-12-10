@@ -74,6 +74,9 @@ class Board:
         return SquaresIterator(self)
 
     async def play(self, x, y):
+        if self.is_victory():
+            raise WinnerException(self.actual_player)
+
         await self[x, y].increment()
         await self.process()
 
@@ -99,6 +102,11 @@ class Board:
             raise GameException('No active players')
         return False
 
+    def is_expecting_move(self):
+        return (not self.history
+                 or (self.history_position == len(self.history) - 1
+                     and not self.is_victory()))
+
     def dump(self):
         dump = ''
         for square in self:
@@ -107,7 +115,7 @@ class Board:
         dump += '%s' % self.actual_player.number
         return dump
 
-    def load(self, dump, soft=False):
+    def load(self, dump):
         assert len(dump) == self.width * self.height * 2 + 1
 
         for sq_nr, square in enumerate(self):
@@ -116,19 +124,19 @@ class Board:
                             if player_number != '-' else None
             square.value = int(dump[2 * sq_nr + 1])
 
-        self.recalculate_players(soft)
+        self.recalculate_players()
 
         self.players_wheel.set_number(int(dump[-1]))
         self.actual_player = next(self.players_wheel)
 
-    def recalculate_players(self, soft=False):
+    def recalculate_players(self):
         for player in self.players:
             player.amount = 0
             player.active = True
         for square in self:
             if square.player:
                 square.player.amount += square.value
-        if not soft:
+        if self.overall_value >= len(self.players):
             for player in self.players:
                 if player.amount <= 0:
                     player.active = False
@@ -140,10 +148,9 @@ class Board:
     def history_jump(self, step):
         if 0 <= self.history_position + step < len(self.history):
             self.history_position += step
-            soft = self.history_position <= len(self.players)
-            self.load(self.history[self.history_position], soft)
+            self.load(self.history[self.history_position])
         else:
-            raise HistoryException('already at a corner')
+            raise HistoryException('cannot jump there')
 
 
 class Square:

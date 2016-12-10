@@ -23,7 +23,6 @@ class App:
         self._players = players
         self._bots = bots
         self._board = None
-        self.in_game = True
 
     @property
     def board(self):
@@ -67,13 +66,11 @@ class App:
 
             elif ev == curses.KEY_F2:
                 self.create_new_board()
-                self.in_game = True
                 self.refresh()
 
             elif ev == curses.KEY_LEFT:
                 try:
                     self.board.history_jump(-1)
-                    self.in_game = True
                     self.refresh()
                 except engine.HistoryException:
                     pass
@@ -81,12 +78,12 @@ class App:
             elif ev == curses.KEY_RIGHT:
                 try:
                     self.board.history_jump(+1)
-                    self.in_game = not self.board.is_victory()
                     self.refresh()
                 except engine.HistoryException:
                     pass
 
-            if self.in_game and self.board.actual_player.is_bot:
+            if self.board.is_expecting_move() \
+                    and self.board.actual_player.is_bot:
                 x, y = self.board.actual_player.propose_move()
                 await self.make_move(x, y)
                 curses.napms(BOT_SLEEP)
@@ -94,14 +91,11 @@ class App:
             curses.napms(CYCLE_SLEEP)
 
     async def make_move(self, x, y):
-        if not self.in_game:
-            return
+        logger.debug('Making move at %d, %d' % (x, y))
 
         try:
             await self.board.play(x, y)
-        except engine.WinnerException as w:
-            self.in_game = False
-        except engine.SquareException:
+        except (engine.WinnerException, engine.SquareException):
             pass
 
         self.refresh_info()

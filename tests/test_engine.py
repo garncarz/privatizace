@@ -292,15 +292,29 @@ async def test_history():
 async def test_not_neverending():
     board = engine.Board(2, 2, players=3)
 
+    assert board.is_expecting_move()
+
     await board[0, 0].increment()
     await board.process()
+
+    assert board.is_expecting_move()
 
     await board[0, 1].increment()
     await board.process()
 
+    assert board.is_expecting_move()
+
     await board[1, 0].increment()
     await board.process()
+
+    assert board.is_expecting_move()
 
     await board[0, 0].increment()
     with pytest.raises(engine.WinnerException):
         await board.process()
+
+    assert not board.is_expecting_move()
+
+    board.history_jump(-1)
+
+    assert not board.is_expecting_move()
