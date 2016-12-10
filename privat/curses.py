@@ -164,6 +164,7 @@ class App:
 
             curses.noecho()
             curses.cbreak()
+            curses.curs_set(0)
             self.screen.keypad(1)
             self.screen.nodelay(1)
 
@@ -182,4 +183,5 @@ class App:
             self.screen.keypad(0)
             curses.echo()
             curses.nocbreak()
+            curses.curs_set(1)
             curses.endwin()
