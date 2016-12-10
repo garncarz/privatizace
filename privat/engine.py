@@ -193,7 +193,8 @@ class Square:
 
                 neighbour.player = self.player
 
-                self.board.tasks.append(
+                self.board.tasks.insert(
+                    0,
                     asyncio.ensure_future(neighbour.increment())
                 )
 
