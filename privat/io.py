@@ -1,5 +1,6 @@
 import json
 
+from . import __version__
 from . import engine
 
 
@@ -9,6 +10,7 @@ def save_board(board, out_file):
         'height': board.height,
         'players': len(board.players),
         'history': board.history,
+        'version': __version__,
     }
 
     out_file.write(json.dumps(data))
