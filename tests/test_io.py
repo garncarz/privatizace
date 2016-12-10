@@ -28,6 +28,7 @@ async def test_save_and_load():
     assert board1.width == board2.width
     assert board1.height == board2.height
     assert board1.overall_value == board2.overall_value
+    assert board1.actual_player.number == board2.actual_player.number
 
     for square1, square2 in zip(board1, board2):
         assert square1.value == square2.value
