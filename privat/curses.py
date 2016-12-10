@@ -6,7 +6,9 @@ from . import engine
 from . import io
 
 
+CYCLE_SLEEP = 10
 SQUARE_SLEEP = 100
+BOT_SLEEP = 500
 
 SAVE_FILE = os.path.expanduser('~/.privatizace')
 
@@ -15,10 +17,11 @@ logger = logging.getLogger(__name__)
 
 class App:
 
-    def __init__(self, width=8, height=8, players=4):
+    def __init__(self, width=8, height=8, players=4, bots=0):
         self._width = width
         self._height = height
         self._players = players
+        self._bots = bots
         self._board = None
         self.in_game = True
 
@@ -26,14 +29,15 @@ class App:
     def board(self):
         if not self._board:
             try:
-                self._board = io.load_board(open(SAVE_FILE))
+                self._board = io.load_board(open(SAVE_FILE), bots=self._bots)
                 self._board.listeners.append(self)
             except Exception:
                 self.create_new_board()
         return self._board
 
     def create_new_board(self):
-        self._board = engine.Board(self._width, self._height, self._players)
+        self._board = engine.Board(self._width, self._height, self._players,
+                                   bots=self._bots)
         self._board.listeners.append(self)
 
     async def _run(self):
@@ -57,20 +61,9 @@ class App:
                 except curses.error:
                     continue
 
-                if self.in_game and m_ev & curses.BUTTON1_RELEASED:
-                    try:
-                        await self.board.play(x, y)
-                    except engine.WinnerException as w:
-                        self.in_game = False
-                    except engine.SquareException:
-                        pass
-
-                    self.refresh_info()
-
-                    try:
-                        io.save_board(self.board, open(SAVE_FILE, 'w'))
-                    except Exception:
-                        pass
+                if m_ev & curses.BUTTON1_RELEASED \
+                        and not self.board.actual_player.is_bot:
+                    await self.make_move(x, y)
 
             elif ev == curses.KEY_F2:
                 self.create_new_board()
@@ -91,6 +84,31 @@ class App:
                     self.refresh()
                 except engine.HistoryException:
                     pass
+
+            if self.board.actual_player.is_bot:
+                x, y = self.board.actual_player.propose_move()
+                await self.make_move(x, y)
+                curses.napms(BOT_SLEEP)
+
+            curses.napms(CYCLE_SLEEP)
+
+    async def make_move(self, x, y):
+        if not self.in_game:
+            return
+
+        try:
+            await self.board.play(x, y)
+        except engine.WinnerException as w:
+            self.in_game = False
+        except engine.SquareException:
+            pass
+
+        self.refresh_info()
+
+        try:
+            io.save_board(self.board, open(SAVE_FILE, 'w'))
+        except Exception:
+            pass
 
     def refresh(self):
         self.screen.clear()
@@ -147,6 +165,7 @@ class App:
             curses.noecho()
             curses.cbreak()
             self.screen.keypad(1)
+            self.screen.nodelay(1)
 
             curses.start_color()
             bg = curses.COLOR_BLACK  # original uses YELLOW

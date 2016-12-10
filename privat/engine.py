@@ -23,14 +23,17 @@ class HistoryException(GameException):
 
 class Board:
 
-    def __init__(self, width=8, height=8, players=4):
+    def __init__(self, width=8, height=8, players=4, bots=0):
         self.width = width
         self.height = height
 
         self.tasks = []
         self.listeners = []
 
-        self.players = [Player(i) for i in range(players)]
+        from .bot import Bot
+        self.players = \
+            [Player(self, i) for i in range(players - bots)] \
+            + [Bot(self, i) for i in range(players - bots, players)]
         self.players_wheel = PlayersWheel(self.players)
         self.actual_player = next(self.players_wheel)
 
@@ -208,7 +211,8 @@ class Player:
 
     NAMES = ['Tesla', 'Lacrum', 'Loana', 'Tatra']
 
-    def __init__(self, number, name=None):
+    def __init__(self, board, number, name=None):
+        self.board = board
         self.number = number
         self.name = name or self.NAMES[self.number]
         self.amount = 0
@@ -223,6 +227,10 @@ class Player:
     @property
     def color(self):
         return self.number + 1
+
+    @property
+    def is_bot(self):
+        return False
 
 
 class SquaresIterator:

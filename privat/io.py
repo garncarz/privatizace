@@ -14,13 +14,14 @@ def save_board(board, out_file):
     out_file.write(json.dumps(data))
 
 
-def load_board(in_file):
+def load_board(in_file, bots=0):
     data = json.loads(in_file.read())
 
     board = engine.Board(
         width=int(data['width']),
         height=int(data['height']),
         players=int(data['players']),
+        bots=bots,
     )
 
     board.history = data['history']
