@@ -67,6 +67,7 @@ class App:
 
             elif ev == curses.KEY_F2:
                 self.create_new_board()
+                self.in_game = True
                 self.refresh()
 
             elif ev == curses.KEY_LEFT:
@@ -80,12 +81,12 @@ class App:
             elif ev == curses.KEY_RIGHT:
                 try:
                     self.board.history_jump(+1)
-                    self.in_game = True
+                    self.in_game = not self.board.is_victory()
                     self.refresh()
                 except engine.HistoryException:
                     pass
 
-            if self.board.actual_player.is_bot:
+            if self.in_game and self.board.actual_player.is_bot:
                 x, y = self.board.actual_player.propose_move()
                 await self.make_move(x, y)
                 curses.napms(BOT_SLEEP)
