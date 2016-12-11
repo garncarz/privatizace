@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-from privat import __version__
+from privatizace import __version__
 
 
 classifiers = """\
@@ -30,7 +30,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'privatizace = privat.app:main',
+            'privatizace = privatizace.app:main',
         ],
     },
 )

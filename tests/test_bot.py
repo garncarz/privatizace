@@ -1,6 +1,6 @@
 import pytest
 
-from privat import engine
+from privatizace import engine
 
 
 MAX_TRIES = 1000

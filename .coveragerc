@@ -1,4 +1,4 @@
 [run]
 omit =
-    privat/app.py
-    privat/curses.py
+    privatizace/app.py
+    privatizace/curses.py

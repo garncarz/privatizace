@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from privat import engine
+from privatizace import engine
 
 
 def test_init_board():

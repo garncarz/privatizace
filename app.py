@@ -2,7 +2,7 @@
 
 import logging
 
-from privat import app
+from privatizace import app
 
 
 if __name__ == '__main__':

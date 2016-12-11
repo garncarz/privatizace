@@ -2,8 +2,8 @@ import io
 
 import pytest
 
-from privat import engine
-import privat.io
+from privatizace import engine
+import privatizace.io
 
 
 @pytest.mark.asyncio
@@ -20,10 +20,10 @@ async def test_save_and_load():
     await board1.play(1, 1)
 
     save_file = io.StringIO()
-    privat.io.save_board(board1, save_file)
+    privatizace.io.save_board(board1, save_file)
 
     save_file.seek(0)
-    board2 = privat.io.load_board(save_file)
+    board2 = privatizace.io.load_board(save_file)
 
     assert board1.width == board2.width
     assert board1.height == board2.height
