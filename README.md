@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/garncarz/privatizace.svg?branch=master)](https://travis-ci.org/garncarz/privatizace)
 [![Coverage Status](https://coveralls.io/repos/github/garncarz/privatizace/badge.svg?branch=master)](https://coveralls.io/github/garncarz/privatizace?branch=master)
+[![PyPI version](https://badge.fury.io/py/privatizace.svg)](https://badge.fury.io/py/privatizace)
 
 This is a homage to the old game
 [Velká privatizace](http://www.bestoldgames.net/velka-privatizace).
