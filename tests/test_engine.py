@@ -302,3 +302,12 @@ async def test_not_neverending():
     board.history_jump(-1)
 
     assert not board.is_expecting_move()
+
+
+@pytest.mark.asyncio
+async def test_zero_is_not_dead():
+    board = engine.Board(2, 2, players=2)
+
+    board.load('010101101')
+
+    await board.play(1, 1)

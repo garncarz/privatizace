@@ -132,13 +132,17 @@ class Board:
     def recalculate_players(self):
         for player in self.players:
             player.amount = 0
+            player.squares_count = 0
             player.active = True
+
         for square in self:
             if square.player:
                 square.player.amount += square.value
+                square.player.squares_count += 1
+
         if self.overall_value >= len(self.players):
             for player in self.players:
-                if player.amount <= 0:
+                if player.squares_count <= 0:
                     player.active = False
 
     @property
@@ -183,6 +187,7 @@ class Square:
                                   % (self, self.board.actual_player))
         if not self.player:
             self.player = self.board.actual_player
+            self.player.squares_count += 1
 
         self.value += 1
         self.player.amount += 1
@@ -194,9 +199,13 @@ class Square:
             for neighbour in self.neighbours.values():
                 if neighbour.player and neighbour.player != self.player:
                     neighbour.player.amount -= neighbour.value
-                    if neighbour.player.amount == 0:
+                    neighbour.player.squares_count -= 1
+
+                    if neighbour.player.squares_count <= 0:
                         neighbour.player.active = False
+
                     self.player.amount += neighbour.value
+                    self.player.squares_count += 1
 
                 neighbour.player = self.player
 
@@ -224,6 +233,7 @@ class Player:
         self.number = number
         self.name = name or self.NAMES[self.number]
         self.amount = 0
+        self.squares_count = 0
         self.active = True
 
     def __repr__(self):
