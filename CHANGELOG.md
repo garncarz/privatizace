@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 - Simple bot.
 
 ### Changed
-- Player is dead once having no squares, reserved 0 value squares keep alive.
 - Python package renamed from `privat` to `privatizace`.
 - Squares expanding by LIFO, not FIFO.
 

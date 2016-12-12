@@ -305,9 +305,10 @@ async def test_not_neverending():
 
 
 @pytest.mark.asyncio
-async def test_zero_is_not_dead():
+async def test_zero_is_the_end():
     board = engine.Board(2, 2, players=2)
 
     board.load('010101101')
 
-    await board.play(1, 1)
+    with pytest.raises(engine.WinnerException):
+        await board.play(1, 1)
