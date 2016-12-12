@@ -162,19 +162,19 @@ async def test_dump_and_load():
     assert not board2[3, 3].player
 
 
-@pytest.mark.parametrize('max_x, max_y, steps', [
+@pytest.mark.parametrize('width, height, steps', [
     (5, 5, 40),
     (5, 5, 100),
     (4, 4, 50),
 ])
 @pytest.mark.asyncio
-async def test_continuous_addition(max_x, max_y, steps):
-    board = engine.Board(max_x, max_y)
+async def test_continuous_addition(width, height, steps):
+    board = engine.Board(width, height)
     old_value = 0
 
     for step in range(steps):
-        x = random.randint(0, max_x)
-        y = random.randint(0, max_y)
+        x = random.randint(0, width - 1)
+        y = random.randint(0, height - 1)
 
         try:
             await board.play(x, y)

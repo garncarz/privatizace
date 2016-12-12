@@ -201,13 +201,17 @@ class Square:
                     neighbour.player.amount -= neighbour.value
                     neighbour.player.squares_count -= 1
 
-                    if neighbour.player.squares_count <= 0:
+                    if neighbour.player.squares_count == 0:
                         neighbour.player.active = False
+                    elif neighbour.player.squares_count < 0:
+                        raise GameException('squares_count < 0',
+                                            neighbour,
+                                            neighbour.player)
 
                     self.player.amount += neighbour.value
                     self.player.squares_count += 1
 
-                neighbour.player = self.player
+                    neighbour.player = self.player
 
                 self.board.tasks.insert(
                     0,
