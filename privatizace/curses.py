@@ -95,8 +95,10 @@ class App:
 
         try:
             await self.board.play(x, y)
-        except (engine.WinnerException, engine.SquareException):
-            pass
+        except engine.WinnerException as w:
+            logger.info('Winner: %s' % w)
+        except engine.SquareException:
+            logger.exception('Invalid move')
 
         self.refresh_info()
 

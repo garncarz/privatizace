@@ -13,7 +13,7 @@ MAX_TRIES = 1000
     (8, 6, 4),
 ])
 @pytest.mark.asyncio
-async def test_two_bots(width, height, bots):
+async def test_bots_play(width, height, bots):
     board = engine.Board(width, height, players=bots, bots=bots)
 
     for _ in range(MAX_TRIES):
