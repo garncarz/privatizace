@@ -8,7 +8,7 @@ from . import io
 
 CYCLE_SLEEP = 10
 SQUARE_SLEEP = 100
-BOT_SLEEP = 500
+BOT_SLEEP = 1500
 
 SAVE_FILE = os.path.expanduser('~/.privatizace')
 
@@ -84,9 +84,9 @@ class App:
 
             if self.board.is_expecting_move() \
                     and self.board.actual_player.is_bot:
+                curses.napms(BOT_SLEEP)
                 x, y = self.board.actual_player.propose_move()
                 await self.make_move(x, y)
-                curses.napms(BOT_SLEEP)
 
             curses.napms(CYCLE_SLEEP)
 
