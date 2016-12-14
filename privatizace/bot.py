@@ -1,9 +1,12 @@
+import bisect
+import itertools
 import random
 
 from .engine import Player
 
 
 MAX_TRIES = 200
+MAX_RATINGS = 10
 
 
 class Bot(Player):
@@ -30,15 +33,43 @@ class Bot(Player):
                 return x, y
 
     def propose_rated(self):
-        choices = []
+        ratings = {}
 
         for square in self.board:
-            rating = square.value / len(square.neighbours)
-            choices.append((rating, square))
+            rating = (square.value / len(square.neighbours)
+                      if square.value
+                      else random.random() * 0.1)
+            ratings[square] = [rating] + [0] * (MAX_RATINGS - 1)
 
-        choices = sorted(choices, key=lambda ch: ch[0], reverse=True)
-        choices = filter(lambda ch: ch[1].player in [None, self], choices)
+        for rating_nr in range(1, MAX_RATINGS):
+            for square in ratings.keys():
+                my_rating = ratings[square][rating_nr] \
+                          = ratings[square][rating_nr - 1]
 
-        square = random.choice(list(choices)[:10])[1]
+                for neighbour in square.neighbours.values():
+                    neigh_rating = ratings[neighbour][rating_nr - 1]
+
+                    if neighbour.player == square.player:
+                        sign = 1
+                    elif neigh_rating > my_rating:
+                        sign = -1
+                    else:
+                        sign = 1
+
+                    ratings[square][rating_nr] += sign \
+                        * neigh_rating / len(neighbour.neighbours)
+
+        choices = list(filter(lambda r: r[0].player in [None, self],
+                              ratings.items()))
+
+        cumdist = list(itertools.accumulate(
+            map(lambda ch: ch[1][-1], choices))
+        )
+        x = random.random() * cumdist[-1]
+        try:
+            choice = choices[bisect.bisect(cumdist, x)]
+        except IndexError:
+            choice = random.choice(choices)
+        square = choice[0]
 
         return square.x, square.y

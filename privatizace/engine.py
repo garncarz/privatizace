@@ -173,6 +173,9 @@ class Square:
                 return True
         return False
 
+    def __hash__(self):
+        return self.x * self.board.height + self.y
+
     def __getattr__(self, name):
         if name in self.neighbours:
             return self.neighbours[name]

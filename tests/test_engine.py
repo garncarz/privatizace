@@ -312,3 +312,10 @@ async def test_zero_is_the_end():
 
     with pytest.raises(engine.WinnerException):
         await board.play(1, 1)
+
+
+def test_square_hash():
+    board = engine.Board(3, 4)
+
+    assert hash(board[1]) == 1
+    assert hash(board[5]) == 5
