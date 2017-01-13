@@ -73,9 +73,15 @@ class Board:
     def __iter__(self):
         return SquaresIterator(self)
 
-    async def play(self, x, y):
+    async def play(self, x=None, y=None):
         if self.is_victory():
             raise WinnerException(self.actual_player)
+
+        if x is None or y is None:
+            x, y = self.actual_player.propose_move()
+
+        self.last_move = {'x': x, 'y': y}
+        logger.info('%s moving at %d, %d' % (self.actual_player, x, y))
 
         await self[x, y].increment()
         await self.process()

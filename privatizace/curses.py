@@ -85,14 +85,11 @@ class App:
             if self.board.is_expecting_move() \
                     and self.board.actual_player.is_bot:
                 curses.napms(BOT_SLEEP)
-                x, y = self.board.actual_player.propose_move()
-                await self.make_move(x, y)
+                await self.make_move()
 
             curses.napms(CYCLE_SLEEP)
 
-    async def make_move(self, x, y):
-        logger.debug('Making move at %d, %d' % (x, y))
-
+    async def make_move(self, x=None, y=None):
         try:
             await self.board.play(x, y)
         except engine.WinnerException as w:
