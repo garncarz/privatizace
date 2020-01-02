@@ -43,3 +43,6 @@ Preferably under `virtualenv`:
 `./test.sh` (runs tests and also generates a coverage)
 
 `./app.py` (runs the game)
+
+
+<!-- ❄️ Hello to the GitHub Archive! ❄️ -->
