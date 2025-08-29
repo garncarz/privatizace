@@ -12,12 +12,28 @@ This is a homage to the old game
 
 Needed: Python 3.5
 
+### From PyPI
+
 `pip install [--user] privatizace`
+
+### From cloned repository
+
+```bash
+# Basic installation
+pip install [--user] -e .
+
+# With web interface support
+pip install [--user] -e .[web]
+```
 
 
 ## Usage
 
-`privatizace` is an ncurses-based game.
+`privatizace` can be run in two modes:
+
+### ncurses interface (default)
+
+`privatizace` runs an ncurses-based game.
 See `privatizace --help` for command line arguments.
 
 The board is interacted with with a mouse,
@@ -30,6 +46,23 @@ and the game can be controlled by several keys:
 - `q` to quit.
 
 The game automatically saves/loads `~/.privatizace`.
+
+### Web interface
+
+For a modern web-based interface with HTML5 Canvas:
+
+```bash
+privatizace --web --host 0.0.0.0 --port 8000
+```
+
+This provides:
+- Interactive HTML5 Canvas game board
+- Real-time WebSocket communication
+- REST API endpoints
+- History navigation controls
+- Responsive web design
+
+**Note:** Web interface requires additional dependencies. Install with `pip install -e .[web]`.
 
 
 ## Development
