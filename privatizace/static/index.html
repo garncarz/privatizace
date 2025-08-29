@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Privatization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .game-area {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .game-board {
+            flex: 1;
+        }
+        
+        .game-info {
+            width: 300px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #34495e;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .player-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .player-0 { border-left-color: #3498db; }
+        .player-1 { border-left-color: #e74c3c; }
+        .player-2 { border-left-color: #27ae60; }
+        .player-3 { border-left-color: #f39c12; }
+        
+        .current-player {
+            background-color: #fff3cd;
+        }
+        
+        .inactive-player {
+            opacity: 0.5;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .status.info {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.success {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .settings {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .settings h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .form-group label {
+            display: inline-block;
+            width: 80px;
+            font-size: 12px;
+        }
+        
+        .form-group input {
+            width: 60px;
+            padding: 2px 4px;
+            border: 1px solid #ddd;
+            border-radius: 2px;
+        }
+        
+        .history-controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .connection-status.connected {
+            background-color: #27ae60;
+        }
+        
+        .connection-status.disconnected {
+            background-color: #e74c3c;
+        }
+        
+        .connection-status.connecting {
+            background-color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Connecting...</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>The Great Privatization</h1>
+            <p>A logical game - Web Edition</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="game-board">
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="newGame()">New Game</button>
+                    <button class="btn" onclick="refreshGame()">Refresh</button>
+                </div>
+                
+                <div class="history-controls">
+                    <button class="btn" onclick="historyBack()" id="historyBackBtn">← Back</button>
+                    <span id="historyInfo">History: 1/1</span>
+                    <button class="btn" onclick="historyForward()" id="historyForwardBtn">Forward →</button>
+                </div>
+            </div>
+            
+            <div class="game-info">
+                <div id="playersInfo"></div>
+                
+                <div id="gameStatus" class="status info">
+                    Click on a square to make a move
+                </div>
+                
+                <div class="settings">
+                    <h4>New Game Settings</h4>
+                    <div class="form-group">
+                        <label>Width:</label>
+                        <input type="number" id="gameWidth" value="8" min="3" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Height:</label>
+                        <input type="number" id="gameHeight" value="8" min="3" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Players:</label>
+                        <input type="number" id="gamePlayers" value="4" min="2" max="4">
+                    </div>
+                    <div class="form-group">
+                        <label>Bots:</label>
+                        <input type="number" id="gameBots" value="0" min="0" max="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = null;
+        let websocket = null;
+        let canvas = null;
+        let ctx = null;
+        
+        // Colors for players (matching the ncurses colors)
+        const PLAYER_COLORS = [
+            '#3498db', // Blue
+            '#e74c3c', // Red  
+            '#27ae60', // Green
+            '#f39c12'  // Yellow
+        ];
+        
+        // Initialize the game
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.addEventListener('click', handleCanvasClick);
+            
+            connectWebSocket();
+            loadGameState();
+        }
+        
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/default`;
+            
+            updateConnectionStatus('connecting');
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function(event) {
+                console.log('WebSocket connected');
+                updateConnectionStatus('connected');
+            };
+            
+            websocket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+            
+            websocket.onclose = function(event) {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus('disconnected');
+                
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('disconnected');
+            };
+        }
+        
+        // Handle WebSocket messages
+        function handleWebSocketMessage(message) {
+            console.log('WebSocket message:', message);
+            
+            switch(message.type) {
+                case 'game_state':
+                    gameState = message.game_state;
+                    updateDisplay();
+                    break;
+                    
+                case 'square_update':
+                    if (message.game_state) {
+                        gameState = message.game_state;
+                        updateDisplay();
+                    }
+                    break;
+                    
+                case 'move_made':
+                    // Game state will be updated via square_update
+                    break;
+                    
+                case 'game_over':
+                    showStatus(`Game Over! Winner: ${message.winner}`, 'success');
+                    break;
+                    
+                case 'game_created':
+                    if (message.game_state) {
+                        gameState = message.game_state;
+                        updateDisplay();
+                        showStatus('New game created!', 'success');
+                    }
+                    break;
+                    
+                case 'error':
+                    showStatus(message.message, 'error');
+                    break;
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${status}`;
+            
+            switch(status) {
+                case 'connected':
+                    statusEl.textContent = 'Connected';
+                    break;
+                case 'connecting':
+                    statusEl.textContent = 'Connecting...';
+                    break;
+                case 'disconnected':
+                    statusEl.textContent = 'Disconnected';
+                    break;
+            }
+        }
+        
+        // Load initial game state via REST API
+        async function loadGameState() {
+            try {
+                const response = await fetch('/api/game');
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading game state:', error);
+                showStatus('Error loading game state', 'error');
+            }
+        }
+        
+        // Update the display
+        function updateDisplay() {
+            if (!gameState) return;
+            
+            drawBoard();
+            updatePlayersInfo();
+            updateHistoryControls();
+        }
+        
+        // Draw the game board
+        function drawBoard() {
+            if (!gameState) return;
+            
+            const width = gameState.width;
+            const height = gameState.height;
+            
+            // Resize canvas to fit the board
+            const cellSize = Math.min(400 / width, 400 / height);
+            canvas.width = width * cellSize;
+            canvas.height = height * cellSize;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw squares
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    const square = gameState.squares[x][y];
+                    drawSquare(x, y, square, cellSize);
+                }
+            }
+            
+            // Draw grid
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= width; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * cellSize, 0);
+                ctx.lineTo(x * cellSize, height * cellSize);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= height; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * cellSize);
+                ctx.lineTo(width * cellSize, y * cellSize);
+                ctx.stroke();
+            }
+        }
+        
+        // Draw a single square
+        function drawSquare(x, y, square, cellSize) {
+            const canvasX = x * cellSize;
+            const canvasY = y * cellSize;
+            
+            // Fill background
+            if (square.player !== null) {
+                ctx.fillStyle = PLAYER_COLORS[square.player] + '40'; // 40 = 25% alpha
+                ctx.fillRect(canvasX + 1, canvasY + 1, cellSize - 2, cellSize - 2);
+            }
+            
+            // Draw value
+            if (square.value > 0) {
+                ctx.fillStyle = square.player !== null ? PLAYER_COLORS[square.player] : '#34495e';
+                ctx.font = `bold ${Math.min(cellSize * 0.4, 20)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    square.value.toString(),
+                    canvasX + cellSize / 2,
+                    canvasY + cellSize / 2
+                );
+            }
+        }
+        
+        // Update players info
+        function updatePlayersInfo() {
+            if (!gameState) return;
+            
+            const playersInfoEl = document.getElementById('playersInfo');
+            let html = '<h3>Players</h3>';
+            
+            gameState.players.forEach(player => {
+                const isActive = player.active;
+                const isCurrent = player.number === gameState.actual_player;
+                const classes = ['player-info', `player-${player.number}`];
+                
+                if (isCurrent) classes.push('current-player');
+                if (!isActive) classes.push('inactive-player');
+                
+                html += `
+                    <div class="${classes.join(' ')}">
+                        <strong>Player ${player.number + 1}</strong>
+                        ${player.is_bot ? '(Bot)' : ''}
+                        ${isCurrent ? '(Current)' : ''}
+                        <br>
+                        Amount: ${player.amount}
+                        ${!isActive ? ' (Eliminated)' : ''}
+                    </div>
+                `;
+            });
+            
+            playersInfoEl.innerHTML = html;
+        }
+        
+        // Update history controls
+        function updateHistoryControls() {
+            if (!gameState) return;
+            
+            const historyInfo = document.getElementById('historyInfo');
+            const backBtn = document.getElementById('historyBackBtn');
+            const forwardBtn = document.getElementById('historyForwardBtn');
+            
+            historyInfo.textContent = `History: ${gameState.history_position + 1}/${gameState.history_length}`;
+            
+            backBtn.disabled = gameState.history_position <= 0;
+            forwardBtn.disabled = gameState.history_position >= gameState.history_length - 1;
+        }
+        
+        // Handle canvas click
+        function handleCanvasClick(event) {
+            if (!gameState || !gameState.is_expecting_move) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / (canvas.width / gameState.width));
+            const y = Math.floor((event.clientY - rect.top) / (canvas.height / gameState.height));
+            
+            makeMove(x, y);
+        }
+        
+        // Make a move
+        function makeMove(x, y) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'move',
+                    x: x,
+                    y: y
+                }));
+            }
+        }
+        
+        // Create new game
+        function newGame() {
+            const width = parseInt(document.getElementById('gameWidth').value);
+            const height = parseInt(document.getElementById('gameHeight').value);
+            const players = parseInt(document.getElementById('gamePlayers').value);
+            const bots = parseInt(document.getElementById('gameBots').value);
+            
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'new_game',
+                    width: width,
+                    height: height,
+                    players: players,
+                    bots: bots
+                }));
+            }
+        }
+        
+        // Refresh game state
+        function refreshGame() {
+            loadGameState();
+        }
+        
+        // Navigate history
+        async function historyBack() {
+            try {
+                const response = await fetch('/api/game/history/backward', {
+                    method: 'POST'
+                });
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error navigating history:', error);
+            }
+        }
+        
+        async function historyForward() {
+            try {
+                const response = await fetch('/api/game/history/forward', {
+                    method: 'POST'
+                });
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error navigating history:', error);
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('gameStatus');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            
+            // Auto-hide after 5 seconds for non-error messages
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusEl.textContent = 'Click on a square to make a move';
+                    statusEl.className = 'status info';
+                }, 5000);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

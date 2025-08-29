@@ -26,11 +26,19 @@ setup(
     keywords='game logical',
 
     packages=find_packages(),
+    package_data={
+        'privatizace': ['static/*'],
+    },
+    include_package_data=True,
     classifiers=classifiers.splitlines(),
 
     entry_points={
         'console_scripts': [
             'privatizace = privatizace.app:main',
         ],
+    },
+    
+    extras_require={
+        'web': ['fastapi>=0.100.0', 'uvicorn>=0.20.0', 'websockets>=10.0'],
     },
 )
