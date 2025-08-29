@@ -22,6 +22,7 @@ class GameManager:
         self.games: Dict[str, engine.Board] = {}
         self.connections: Dict[str, List[WebSocket]] = {}
         self.default_game_id = "default"
+        self.game_locks: Dict[str, asyncio.Lock] = {}
         
     def create_game(self, game_id: str = None, width: int = 8, height: int = 8, 
                    players: int = 4, bots: int = 0) -> str:
@@ -33,6 +34,7 @@ class GameManager:
         board.listeners.append(GameUpdateListener(self, game_id))
         self.games[game_id] = board
         self.connections[game_id] = []
+        self.game_locks[game_id] = asyncio.Lock()
         
         return game_id
     
@@ -54,6 +56,9 @@ class GameManager:
         if game_id not in self.connections:
             self.connections[game_id] = []
         self.connections[game_id].append(websocket)
+        
+        # Ensure bot automation is running for this game
+        await self.ensure_bot_automation(game_id)
         
     async def remove_connection(self, game_id: str, websocket: WebSocket):
         """Remove a WebSocket connection for a game."""
@@ -78,7 +83,68 @@ class GameManager:
                 # Connection is dead, skip it
                 pass
         
+        # Update the active connections list
         self.connections[game_id] = active_connections
+
+    async def ensure_bot_automation(self, game_id: str):
+        """Ensure bot automation is running for games with bots."""
+        if game_id not in self.games:
+            return
+            
+        board = self.games[game_id]
+        has_bots = any(hasattr(p, 'is_bot') and p.is_bot for p in board.players)
+        
+        if has_bots:
+            # Start bot automation task
+            asyncio.create_task(self._bot_automation_loop(game_id))
+    
+    async def _bot_automation_loop(self, game_id: str):
+        """Automatically make moves for bots in the specified game."""
+        while game_id in self.games:
+            board = self.games[game_id]
+            
+            try:
+                # Use lock to prevent conflicts with human moves
+                async with self.game_locks.get(game_id, asyncio.Lock()):
+                    # Check if it's a bot's turn and the game is expecting a move
+                    if (board.is_expecting_move() and 
+                        hasattr(board.actual_player, 'is_bot') and 
+                        board.actual_player.is_bot):
+                        
+                        logger.info(f"Bot {board.actual_player.name} making move in game {game_id}")
+                        
+                        # Wait a bit to make bot moves visible
+                        await asyncio.sleep(1.0)
+                        
+                        # Make the bot move
+                        await board.play()
+                        
+                        # Broadcast the updated game state
+                        await self.broadcast_to_game(game_id, {
+                            "type": "game_state",
+                            "game_state": GameUpdateListener(self, game_id)._serialize_board(board)
+                        })
+                        
+                    else:
+                        # Wait before checking again, but don't hold the lock
+                        pass
+                        
+                # Wait outside the lock
+                await asyncio.sleep(0.2)
+                    
+            except engine.WinnerException as e:
+                # Game is over, broadcast the result
+                await self.broadcast_to_game(game_id, {
+                    "type": "game_over",
+                    "winner": str(e),
+                    "game_state": GameUpdateListener(self, game_id)._serialize_board(board)
+                })
+                # Exit the loop as game is finished
+                break
+                
+            except Exception as e:
+                logger.error(f"Error in bot automation for game {game_id}: {e}")
+                await asyncio.sleep(1.0)
 
 
 class GameUpdateListener:
@@ -121,6 +187,7 @@ class GameUpdateListener:
             "players": [
                 {
                     "number": p.number,
+                    "name": p.name,
                     "active": p.active,
                     "amount": p.amount,
                     "is_bot": hasattr(p, 'is_bot') and p.is_bot,
@@ -311,18 +378,56 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str = "default"):
                 if data.get("type") == "move":
                     x, y = data.get("x"), data.get("y")
                     if x is not None and y is not None:
-                        try:
-                            await board.play(x, y)
-                        except engine.WinnerException as e:
-                            await websocket.send_json({
-                                "type": "game_over",
-                                "winner": str(e)
-                            })
-                        except engine.SquareException as e:
-                            await websocket.send_json({
-                                "type": "error",
-                                "message": str(e)
-                            })
+                        logger.info(f"Human move attempt: ({x}, {y}) in game {game_id}")
+                        
+                        # Use lock to prevent conflicts with bot moves
+                        async with game_manager.game_locks.get(game_id, asyncio.Lock()):
+                            try:
+                                # Validate that it's expecting a move and it's a human player's turn
+                                if not board.is_expecting_move():
+                                    await websocket.send_json({
+                                        "type": "error",
+                                        "message": "Game is not expecting a move right now"
+                                    })
+                                    continue
+                                    
+                                if hasattr(board.actual_player, 'is_bot') and board.actual_player.is_bot:
+                                    await websocket.send_json({
+                                        "type": "error",
+                                        "message": f"It's {board.actual_player.name}'s (bot) turn"
+                                    })
+                                    continue
+                                
+                                logger.info(f"Processing move for player {board.actual_player.name}")
+                                await board.play(x, y)
+                                
+                                # Broadcast updated game state to all clients
+                                listener = GameUpdateListener(game_manager, game_id)
+                                await game_manager.broadcast_to_game(game_id, {
+                                    "type": "game_state",
+                                    "game_state": listener._serialize_board(board)
+                                })
+                                
+                            except engine.WinnerException as e:
+                                await websocket.send_json({
+                                    "type": "game_over",
+                                    "winner": str(e),
+                                    "game_state": GameUpdateListener(game_manager, game_id)._serialize_board(board)
+                                })
+                            except engine.SquareException as e:
+                                logger.warning(f"Invalid move: {e}")
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "message": str(e),
+                                    "game_state": GameUpdateListener(game_manager, game_id)._serialize_board(board)
+                                })
+                            except Exception as e:
+                                logger.error(f"Unexpected error during move: {e}")
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "message": f"Unexpected error: {str(e)}",
+                                    "game_state": GameUpdateListener(game_manager, game_id)._serialize_board(board)
+                                })
                             
                 elif data.get("type") == "new_game":
                     width = data.get("width", 8)

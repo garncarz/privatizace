@@ -1,7 +1,11 @@
 import argparse
 import asyncio
 
-from . import curses
+# Import curses conditionally to avoid unnecessary dependency issues
+try:
+    from . import curses
+except ImportError:
+    curses = None
 
 
 arg_parser = argparse.ArgumentParser(
@@ -31,21 +35,24 @@ def main():
     if args.web:
         # Import web module only when needed to avoid dependency issues
         from . import web
-        
+
         # Create default game with specified parameters
         web.game_manager.create_game(
-            width=args.width, 
-            height=args.height, 
-            players=args.players, 
+            width=args.width,
+            height=args.height,
+            players=args.players,
             bots=args.bots
         )
-        
+
         if args.load:
             board = web.game_manager.ensure_default_game()
             board.load(args.load)
-        
+
         web.run_server(host=args.host, port=args.port)
     else:
+        if not curses:
+            raise ImportError("The curses module is required for ncurses mode but is not available.")
+
         # Original ncurses mode
         app = curses.App(width=args.width, height=args.height,
                          players=args.players, bots=args.bots)
