@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Privatization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            height: calc(100vh - 20px);
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .game-area {
+            display: flex;
+            flex: 1;
+            padding: 15px;
+            gap: 15px;
+            min-height: 0;
+        }
+        
+        .game-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-info {
+            width: 320px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .game-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 15px;
+        }
+        
+        .game-header h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+        }
+        
+        .game-header p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #34495e;
+            border-radius: 4px;
+            max-width: 100%;
+            max-height: 70vh;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls .btn {
+            margin: 0 5px;
+        }
+        
+        .history-controls {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .history-controls .btn {
+            margin: 0 5px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-muted {
+            background-color: #95a5a6 !important;
+            opacity: 0.7;
+        }
+        
+        .btn-muted:hover {
+            background-color: #7f8c8d !important;
+        }
+        
+        .player-info.winner-player {
+            background-color: #f1c40f !important;
+            color: #2c3e50 !important;
+            font-weight: bold;
+            animation: winner-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes winner-glow {
+            from { box-shadow: 0 0 5px #f1c40f; }
+            to { box-shadow: 0 0 20px #f1c40f, 0 0 30px #f1c40f; }
+        }
+        
+        .player-info {
+            margin: 8px 0;
+            padding: 8px;
+            border-left: 4px solid #bdc3c7;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .settings {
+            margin-top: 15px;
+        }
+        
+        .settings h4 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+        
+        .form-group {
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        .form-group label {
+            display: inline-block;
+            width: 60px;
+            font-size: 0.85rem;
+        }
+        
+        .form-group input {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }        .player-0 { border-left-color: #3498db; }
+        .player-1 { border-left-color: #e74c3c; }
+        .player-2 { border-left-color: #27ae60; }
+        .player-3 { border-left-color: #000000; }
+        
+        .current-player {
+            background-color: #fff3cd;
+        }
+        
+        .inactive-player {
+            opacity: 0.5;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .status.info {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.success {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .settings {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .settings h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .form-group label {
+            display: inline-block;
+            width: 80px;
+            font-size: 12px;
+        }
+        
+        .form-group input {
+            width: 60px;
+            padding: 2px 4px;
+            border: 1px solid #ddd;
+            border-radius: 2px;
+        }
+        
+        .history-controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .connection-status.connected {
+            background-color: #27ae60;
+        }
+        
+        .connection-status.disconnected {
+            background-color: #e74c3c;
+        }
+        
+        .connection-status.connecting {
+            background-color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Connecting...</div>
+    
+    <div class="container">
+        <div class="game-area">
+            <div class="game-board">
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="newGame()">New Game</button>
+                    <button class="btn" onclick="refreshGame()">Refresh</button>
+                    <button class="btn" onclick="toggleSound()" id="soundToggle">🔊 Sound On</button>
+                </div>
+                
+                <div class="history-controls">
+                    <button class="btn" onclick="historyBack()" id="historyBackBtn">← Back</button>
+                    <span id="historyInfo">History: 1/1</span>
+                    <button class="btn" onclick="historyForward()" id="historyForwardBtn">Forward →</button>
+                </div>
+            </div>
+            
+            <div class="game-info">
+                <div class="game-header">
+                    <h1>The Great Privatization</h1>
+                    <p>A logical game - Web Edition</p>
+                </div>
+                
+                <div id="playersInfo"></div>
+                
+                <div id="gameStatus" class="status info">
+                    Click on a square to make a move
+                </div>
+                
+                <div class="settings">
+                    <h4>New Game Settings</h4>
+                    <div class="form-group">
+                        <label>Width:</label>
+                        <input type="number" id="gameWidth" value="8" min="3" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Height:</label>
+                        <input type="number" id="gameHeight" value="8" min="3" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Players:</label>
+                        <input type="number" id="gamePlayers" value="4" min="2" max="4">
+                    </div>
+                    <div class="form-group">
+                        <label>Bots:</label>
+                        <input type="number" id="gameBots" value="0" min="0" max="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = null;
+        let previousGameState = null;
+        let websocket = null;
+        let canvas = null;
+        let ctx = null;
+        let soundEnabled = true;
+        let audioContext = null;
+        
+        // Initialize audio context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // Play a beep sound
+        function playBeep(frequency, duration, volume = 0.1) {
+            if (!soundEnabled) return;
+            
+            try {
+                initAudio();
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.warn('Audio not supported:', e);
+            }
+        }
+        
+        // Sound effects
+        function playMoveSound() {
+            playBeep(200, 0.1); // Bass beep for adding dots
+        }
+        
+        function playExplosionSound() {
+            playBeep(800, 0.15); // Higher beep for explosions
+        }
+        
+        function playVictorySound() {
+            // Play a sequence of victory notes
+            setTimeout(() => playBeep(523, 0.2), 0);   // C
+            setTimeout(() => playBeep(659, 0.2), 200); // E
+            setTimeout(() => playBeep(784, 0.2), 400); // G
+            setTimeout(() => playBeep(1047, 0.4), 600); // C high
+        }
+        
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('soundToggle');
+            btn.textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+            btn.className = soundEnabled ? 'btn' : 'btn btn-muted';
+        }
+        
+        // Colors for players (matching the ncurses colors)
+        const PLAYER_COLORS = [
+            '#3498db', // Blue - Tesla
+            '#e74c3c', // Red - Lacrum
+            '#27ae60', // Green - Loana
+            '#000000'  // Black - Tatra
+        ];
+        
+        // Initialize the game
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.addEventListener('click', handleCanvasClick);
+            
+            connectWebSocket();
+            loadGameState();
+        }
+        
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/default`;
+            
+            updateConnectionStatus('connecting');
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function(event) {
+                console.log('WebSocket connected');
+                updateConnectionStatus('connected');
+            };
+            
+            websocket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+            
+            websocket.onclose = function(event) {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus('disconnected');
+                
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('disconnected');
+            };
+        }
+        
+        // Handle WebSocket messages
+        function handleWebSocketMessage(message) {
+            console.log('WebSocket message:', message);
+            
+            switch(message.type) {
+                case 'game_state':
+                    gameState = message.game_state;
+                    updateDisplay();
+                    break;
+                    
+                case 'square_update':
+                    if (message.game_state) {
+                        gameState = message.game_state;
+                        updateDisplay();
+                    }
+                    break;
+                    
+                case 'move_made':
+                    // Game state will be updated via square_update
+                    break;
+                    
+                case 'game_over':
+                    showStatus(`Game Over! Winner: ${message.winner}`, 'success');
+                    playVictorySound(); // Play victory sound for game over
+                    break;
+                    
+                case 'game_created':
+                    if (message.game_state) {
+                        gameState = message.game_state;
+                        updateDisplay();
+                        showStatus('New game created!', 'success');
+                    }
+                    break;
+                    
+                case 'error':
+                    showStatus(message.message, 'error');
+                    break;
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${status}`;
+            
+            switch(status) {
+                case 'connected':
+                    statusEl.textContent = 'Connected';
+                    break;
+                case 'connecting':
+                    statusEl.textContent = 'Connecting...';
+                    break;
+                case 'disconnected':
+                    statusEl.textContent = 'Disconnected';
+                    break;
+            }
+        }
+        
+        // Load initial game state via REST API
+        async function loadGameState() {
+            try {
+                const response = await fetch('/api/game');
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading game state:', error);
+                showStatus('Error loading game state', 'error');
+            }
+        }
+        
+        // Update the display
+        function updateDisplay() {
+            if (!gameState) return;
+            
+            // Check for explosions (squares that changed)
+            if (previousGameState && previousGameState.squares) {
+                let explosionsDetected = false;
+                for (let x = 0; x < gameState.width; x++) {
+                    for (let y = 0; y < gameState.height; y++) {
+                        const currentSquare = gameState.squares[x][y];
+                        const prevSquare = previousGameState.squares[x] ? previousGameState.squares[x][y] : null;
+                        
+                        if (prevSquare && (currentSquare.value !== prevSquare.value || currentSquare.player !== prevSquare.player)) {
+                            explosionsDetected = true;
+                        }
+                    }
+                }
+                
+                if (explosionsDetected) {
+                    playExplosionSound();
+                }
+            }
+            
+            drawBoard();
+            updatePlayersInfo();
+            updateHistoryControls();
+            
+            // Store current state for next comparison
+            previousGameState = JSON.parse(JSON.stringify(gameState));
+        }
+        
+        // Draw the game board
+        function drawBoard() {
+            if (!gameState) return;
+            
+            const width = gameState.width;
+            const height = gameState.height;
+            
+            // Calculate optimal canvas size based on available space
+            const maxCanvasSize = Math.min(window.innerHeight * 0.7, window.innerWidth * 0.6, 600);
+            const cellSize = Math.min(maxCanvasSize / width, maxCanvasSize / height);
+            canvas.width = width * cellSize;
+            canvas.height = height * cellSize;
+            canvas.height = height * cellSize;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw squares
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    const square = gameState.squares[x][y];
+                    drawSquare(x, y, square, cellSize);
+                }
+            }
+            
+            // Draw grid
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= width; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * cellSize, 0);
+                ctx.lineTo(x * cellSize, height * cellSize);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= height; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * cellSize);
+                ctx.lineTo(width * cellSize, y * cellSize);
+                ctx.stroke();
+            }
+        }
+        
+        // Draw a single square
+        function drawSquare(x, y, square, cellSize) {
+            const canvasX = x * cellSize;
+            const canvasY = y * cellSize;
+            
+            // Fill background
+            if (square.player !== null) {
+                ctx.fillStyle = PLAYER_COLORS[square.player] + '40'; // 40 = 25% alpha
+                ctx.fillRect(canvasX + 1, canvasY + 1, cellSize - 2, cellSize - 2);
+            }
+            
+            // Draw dots instead of numbers
+            if (square.value > 0) {
+                ctx.fillStyle = square.player !== null ? PLAYER_COLORS[square.player] : '#34495e';
+                drawDots(canvasX, canvasY, cellSize, square.value);
+            }
+        }
+        
+        function drawDots(canvasX, canvasY, cellSize, value) {
+            const centerX = canvasX + cellSize / 2;
+            const centerY = canvasY + cellSize / 2;
+            const dotRadius = Math.min(cellSize * 0.08, 6); // Increased from 0.06 to 0.08, max from 4 to 6
+            const spacing = cellSize * 0.25; // Increased from 0.2 to 0.25 for even more spacing
+            
+            // Define dot patterns like real dominoes
+            const patterns = {
+                1: [[0, 0]], // center
+                2: [[-spacing*0.7, -spacing*0.7], [spacing*0.7, -spacing*0.7]], // two dots in upper half, side by side
+                3: [[-spacing*0.7, -spacing*0.7], [spacing*0.7, -spacing*0.7], [spacing*0.7, spacing*0.7]], // L shape: upper two + bottom right
+                4: [[-spacing, -spacing], [spacing, -spacing], [-spacing, spacing], [spacing, spacing]], // four corners
+                5: [[-spacing, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [spacing, spacing]], // four corners + center
+                6: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [-spacing, spacing], [0, spacing], [spacing, spacing]], // two columns of three
+                7: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [0, spacing], [spacing, spacing]], // six + center
+                8: [[-spacing, -spacing*1.2], [0, -spacing*1.2], [spacing, -spacing*1.2], [-spacing, 0], [spacing, 0], [-spacing, spacing*1.2], [0, spacing*1.2], [spacing, spacing*1.2]] // three rows
+            };
+            
+            const pattern = patterns[Math.min(value, 8)] || patterns[8];
+            
+            pattern.forEach(([dx, dy]) => {
+                ctx.beginPath();
+                ctx.arc(centerX + dx, centerY + dy, dotRadius, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // For values > 8, show dots + number
+            if (value > 8) {
+                ctx.font = `bold ${Math.min(cellSize * 0.2, 12)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    `+${value - 8}`,
+                    centerX,
+                    centerY + spacing * 1.5
+                );
+            }
+        }
+        
+        // Update players info
+        function updatePlayersInfo() {
+            if (!gameState) return;
+            
+            const playersInfoEl = document.getElementById('playersInfo');
+            let html = '<h3>Players</h3>';
+            
+            // Check if game is over
+            const isGameOver = gameState.is_victory;
+            const winner = isGameOver ? gameState.players.find(p => p.active) : null;
+            
+            gameState.players.forEach(player => {
+                const isActive = player.active;
+                const isCurrent = player.number === gameState.actual_player;
+                const isWinner = isGameOver && winner && player.number === winner.number;
+                const classes = ['player-info', `player-${player.number}`];
+                
+                if (isCurrent && !isGameOver) classes.push('current-player');
+                if (!isActive) classes.push('inactive-player');
+                if (isWinner) classes.push('winner-player');
+                
+                let statusText = '';
+                if (isWinner) {
+                    statusText = '🏆 (Winner!)';
+                } else if (isCurrent && !isGameOver) {
+                    statusText = '(Current)';
+                } else if (!isActive) {
+                    statusText = '';
+                }
+                
+                html += `
+                    <div class="${classes.join(' ')}">
+                        <strong>${player.name || `Player ${player.number + 1}`}</strong>
+                        ${player.is_bot ? '(Bot)' : ''}
+                        ${statusText}
+                        <br>
+                        Amount: ${player.amount}
+                        ${!isActive && !isWinner ? ' (Eliminated)' : ''}
+                    </div>
+                `;
+            });
+            
+            playersInfoEl.innerHTML = html;
+        }
+        
+        // Update history controls
+        function updateHistoryControls() {
+            if (!gameState) return;
+            
+            const historyInfo = document.getElementById('historyInfo');
+            const backBtn = document.getElementById('historyBackBtn');
+            const forwardBtn = document.getElementById('historyForwardBtn');
+            
+            historyInfo.textContent = `History: ${gameState.history_position + 1}/${gameState.history_length}`;
+            
+            backBtn.disabled = gameState.history_position <= 0;
+            forwardBtn.disabled = gameState.history_position >= gameState.history_length - 1;
+        }
+        
+        // Handle canvas click
+        function handleCanvasClick(event) {
+            if (!gameState || !gameState.is_expecting_move) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / (canvas.width / gameState.width));
+            const y = Math.floor((event.clientY - rect.top) / (canvas.height / gameState.height));
+            
+            makeMove(x, y);
+        }
+        
+        // Make a move
+        function makeMove(x, y) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'move',
+                    x: x,
+                    y: y
+                }));
+                
+                // Play move sound when making a move
+                playMoveSound();
+            }
+        }
+        
+        // Create new game
+        function newGame() {
+            const width = parseInt(document.getElementById('gameWidth').value);
+            const height = parseInt(document.getElementById('gameHeight').value);
+            const players = parseInt(document.getElementById('gamePlayers').value);
+            const bots = parseInt(document.getElementById('gameBots').value);
+            
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'new_game',
+                    width: width,
+                    height: height,
+                    players: players,
+                    bots: bots
+                }));
+            }
+        }
+        
+        // Refresh game state
+        function refreshGame() {
+            loadGameState();
+        }
+        
+        // Navigate history
+        async function historyBack() {
+            try {
+                const response = await fetch('/api/game/history/backward', {
+                    method: 'POST'
+                });
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error navigating history:', error);
+            }
+        }
+        
+        async function historyForward() {
+            try {
+                const response = await fetch('/api/game/history/forward', {
+                    method: 'POST'
+                });
+                gameState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error navigating history:', error);
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('gameStatus');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            
+            // Auto-hide after 5 seconds for non-error messages
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusEl.textContent = 'Click on a square to make a move';
+                    statusEl.className = 'status info';
+                }, 5000);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (gameState) {
+                drawBoard();
+            }
+        });
+    </script>
+</body>
+</html>
