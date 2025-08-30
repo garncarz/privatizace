@@ -626,19 +626,19 @@
         function drawDots(canvasX, canvasY, cellSize, value) {
             const centerX = canvasX + cellSize / 2;
             const centerY = canvasY + cellSize / 2;
-            const dotRadius = Math.min(cellSize * 0.06, 4);
-            const spacing = cellSize * 0.15;
+            const dotRadius = Math.min(cellSize * 0.08, 6); // Increased from 0.06 to 0.08, max from 4 to 6
+            const spacing = cellSize * 0.25; // Increased from 0.2 to 0.25 for even more spacing
             
-            // Define dot patterns like dominoes
+            // Define dot patterns like real dominoes
             const patterns = {
-                1: [[0, 0]],
-                2: [[-spacing, -spacing], [spacing, spacing]],
-                3: [[-spacing, -spacing], [0, 0], [spacing, spacing]],
-                4: [[-spacing, -spacing], [spacing, -spacing], [-spacing, spacing], [spacing, spacing]],
-                5: [[-spacing, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [spacing, spacing]],
-                6: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [-spacing, spacing], [0, spacing], [spacing, spacing]],
-                7: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [0, spacing], [spacing, spacing]],
-                8: [[-spacing, -spacing*1.2], [0, -spacing*1.2], [spacing, -spacing*1.2], [-spacing, 0], [spacing, 0], [-spacing, spacing*1.2], [0, spacing*1.2], [spacing, spacing*1.2]]
+                1: [[0, 0]], // center
+                2: [[-spacing*0.7, -spacing*0.7], [spacing*0.7, -spacing*0.7]], // two dots in upper half, side by side
+                3: [[-spacing*0.7, -spacing*0.7], [spacing*0.7, -spacing*0.7], [spacing*0.7, spacing*0.7]], // L shape: upper two + bottom right
+                4: [[-spacing, -spacing], [spacing, -spacing], [-spacing, spacing], [spacing, spacing]], // four corners
+                5: [[-spacing, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [spacing, spacing]], // four corners + center
+                6: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [-spacing, spacing], [0, spacing], [spacing, spacing]], // two columns of three
+                7: [[-spacing, -spacing], [0, -spacing], [spacing, -spacing], [0, 0], [-spacing, spacing], [0, spacing], [spacing, spacing]], // six + center
+                8: [[-spacing, -spacing*1.2], [0, -spacing*1.2], [spacing, -spacing*1.2], [-spacing, 0], [spacing, 0], [-spacing, spacing*1.2], [0, spacing*1.2], [spacing, spacing*1.2]] // three rows
             };
             
             const pattern = patterns[Math.min(value, 8)] || patterns[8];

@@ -48,7 +48,7 @@ class GameManager:
     def ensure_default_game(self) -> engine.Board:
         """Ensure the default game exists."""
         if self.default_game_id not in self.games:
-            self.create_game()
+            self.create_game(bots=3)  # Default game with 3 bots + 1 human
         return self.games[self.default_game_id]
     
     async def add_connection(self, game_id: str, websocket: WebSocket):
